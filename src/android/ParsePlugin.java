@@ -1,5 +1,8 @@
 package org.apache.cordova.core;
 
+import java.lang.*;
+import java.io.*;
+
 import java.util.Set;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -9,6 +12,8 @@ import org.json.JSONException;
 import com.parse.Parse;
 import com.parse.ParseInstallation;
 import com.parse.PushService;
+import com.parse.ParsePush;
+import com.parse.SaveCallback;
 
 public class ParsePlugin extends CordovaPlugin {
     public static final String ACTION_INITIALIZE = "initialize";
@@ -17,6 +22,7 @@ public class ParsePlugin extends CordovaPlugin {
     public static final String ACTION_GET_SUBSCRIPTIONS = "getSubscriptions";
     public static final String ACTION_SUBSCRIBE = "subscribe";
     public static final String ACTION_UNSUBSCRIBE = "unsubscribe";
+	public static final String ACTION_GET_NOTIFICATION_INFO = "getNotificationInfo";
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
@@ -45,6 +51,10 @@ public class ParsePlugin extends CordovaPlugin {
             this.unsubscribe(args.getString(0), callbackContext);
             return true;
         }
+        if (action.equals(ACTION_GET_NOTIFICATION_INFO)) {
+            this.getNotificationInfo(callbackContext);
+            return true;
+        }		
         return false;
     }
 
@@ -55,7 +65,7 @@ public class ParsePlugin extends CordovaPlugin {
                     String appId = args.getString(0);
                     String clientKey = args.getString(1);
                     Parse.initialize(cordova.getActivity(), appId, clientKey);
-                    PushService.setDefaultPushCallback(cordova.getActivity(), cordova.getActivity().getClass());
+                    //PushService.setDefaultPushCallback(cordova.getActivity(), cordova.getActivity().getClass());
                     ParseInstallation.getCurrentInstallation().saveInBackground();
                     callbackContext.success();
                 } catch (JSONException e) {
@@ -95,8 +105,14 @@ public class ParsePlugin extends CordovaPlugin {
     private void subscribe(final String channel, final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(new Runnable() {
             public void run() {
-                PushService.subscribe(cordova.getActivity(), channel, cordova.getActivity().getClass());
-                callbackContext.success();
+				try {
+					ParsePush.subscribeInBackground(channel);
+					//PushService.subscribe(cordova.getActivity(), channel, cordova.getActivity().getClass());
+					callbackContext.success();
+				}
+				catch (Exception e) {
+					 callbackContext.error(ExceptionString.get(e));
+				}
             }
         });
     }
@@ -104,11 +120,32 @@ public class ParsePlugin extends CordovaPlugin {
     private void unsubscribe(final String channel, final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(new Runnable() {
             public void run() {
-                PushService.unsubscribe(cordova.getActivity(), channel);
-                callbackContext.success();
+				try{
+					ParsePush.unsubscribeInBackground(channel);
+					//PushService.unsubscribe(cordova.getActivity(), channel);
+					callbackContext.success();
+				}
+				catch (Exception e) {
+					 callbackContext.error(ExceptionString.get(e));
+				}
             }
         });
     }
-
+	
+    private void getNotificationInfo(final CallbackContext callbackContext) {
+        cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+				try{
+					Receiver myReceiver = new Receiver();
+					String info = myReceiver.pushInfo;
+					callbackContext.success(info);
+					myReceiver.pushInfo = "";
+				}
+				catch (Exception e) {
+					 callbackContext.error(ExceptionString.get(e));
+				}
+            }
+        });
+    }
 }
 

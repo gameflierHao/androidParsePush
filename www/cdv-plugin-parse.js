@@ -57,6 +57,16 @@ var parsePlugin = {
             'unsubscribe',
             [ channel ]
         );
+    },
+	
+    getNotificationInfo: function(successCallback, errorCallback) {
+        cordova.exec(
+            successCallback,
+            errorCallback,
+            'ParsePlugin',
+            'getNotificationInfo',
+            []
+        );
     }
 };
 module.exports = parsePlugin;
