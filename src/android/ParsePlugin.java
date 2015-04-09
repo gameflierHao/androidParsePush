@@ -138,6 +138,9 @@ public class ParsePlugin extends CordovaPlugin {
 				try{
 					Receiver myReceiver = new Receiver();
 					String info = myReceiver.pushInfo;
+					if(info == null || info.isEmpty()){
+						info = "";
+					}					
 					callbackContext.success(info);
 					myReceiver.pushInfo = "";
 				}
