@@ -42,7 +42,16 @@ public class Receiver extends ParsePushBroadcastReceiver {
 			this.pushInfo = "";
 		}
 
-		super.onPushOpen(context, intent);
+		if(myMainActivity.activityVisible==true){
+			Intent i = new Intent(context, myMainActivity.class);
+			i.putExtras(intent.getExtras());
+			i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			context.startActivity(i);
+		}
+		else{
+			super.onPushOpen(context, intent);
+		}
+		
     }
 	
 }
